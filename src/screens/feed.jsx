@@ -43,6 +43,7 @@ export function FeedScreen({ me, config, kind }) {
           onPosted={(post) => setPosts((current) => (post.tier === 'public' || kind === 'substrate' ? [post, ...(current ?? [])] : current))}
         />
       )}
+      {me?.handle && <p className="quiet"><Link to="/morel">{words.writeMorel}</Link></p>}
       {!me && <p className="quiet"><Link to="/auth">sign in</Link> to release something that matters.</p>}
 
       <ErrorNote error={error} />

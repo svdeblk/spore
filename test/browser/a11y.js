@@ -299,6 +299,32 @@ async function walk(browser, theme, width, results) {
   await press(page.getByRole('alertdialog').getByRole('button', { name: 'rot everything', exact: true }));
   await see('nothing decomposing.');
 
+  // a puffball on the profile, then a morel shared to the feed as a card
+  await press(nav('@walker'));
+  await landed('your own spore');
+  await type(page.getByLabel('puffball', { exact: true }), 'out in the woods this week');
+  await press(button('set puffball'));
+  await button('take it down').waitFor();
+  await scan('puffball');
+  await press(nav('feed'));
+  await press(page.getByRole('link', { name: 'write a morel' }));
+  await landed('the morel form');
+  await type(page.getByLabel('title', { exact: true }), 'on moss');
+  await type(page.getByLabel('the morel', { exact: true }), 'a long *thought* about moss. and then some more of it.');
+  await press(page.getByLabel('share to the feed as a card'), ' ');
+  await scan('morel form');
+  await press(button('release morel'));
+  await page.getByRole('heading', { name: 'on moss' }).waitFor();
+  await scan('morel');
+  await press(button('take the card back'));
+  await button('share to the feed').waitFor();
+  await press(button('share to the feed'));
+  await button('take the card back').waitFor();
+  await press(page.getByRole('link', { name: '← burrow' }));
+  await landed('the feed');
+  await page.locator('article', { hasText: 'on moss' }).getByRole('link', { name: 'read morel' }).waitFor();
+  await scan('morel card');
+
   await press(nav('soil'));
   await landed('soil');
   await choose(page.getByLabel('your email address'), 'hosts and fused');
@@ -384,7 +410,7 @@ if (report) {
       return `| ${row.kind} | \`${row.fg}\` | \`${row.bg}\` | ${row.ratio.toFixed(2)} | ${need(row)} | ${verdict} | ${[...row.examples].join('; ').replace(/\|/g, '/')} |`;
     }),
   ].join('\n');
-  fs.writeFileSync(report, `# contrast\n\nmeasured by \`pnpm a11y\` in chromium, ${new Date().toISOString().slice(0, 10)}, on every screen the keyboard walk passes through, at 1280 and 375 wide. a color is what reaches the screen after transparency and opacity. text needs 4.5:1. control edges need 3:1, and only count where the control has no fill to tell it apart. disabled buttons are exempt. the focus ring is the accent color, so its pairs are the accent text rows.\n\n## keyboard\n\nevery flow reached and worked with tab, enter and space alone: the skip link, sign-in by link and by password, propagate, the stewards queue, the handle picker, matter at a chosen tier, a germination, bond and fuse, rot, decay and restore, decompose, the bin's days and emptying it, soil with its tiers, password and spore print, the theme and font toggles, privacy, account deletion. every stop showed a focus ring on screen, and every page change inside the app moved focus to the new content.\n\n${summary.map((line) => `- ${line}`).join('\n')}\n\n## dark\n\n${table('dark')}\n\n## light\n\n${table('light')}\n`);
+  fs.writeFileSync(report, `# contrast\n\nmeasured by \`pnpm a11y\` in chromium, ${new Date().toISOString().slice(0, 10)}, on every screen the keyboard walk passes through, at 1280 and 375 wide. a color is what reaches the screen after transparency and opacity. text needs 4.5:1. control edges need 3:1, and only count where the control has no fill to tell it apart. disabled buttons are exempt. the focus ring is the accent color, so its pairs are the accent text rows.\n\n## keyboard\n\nevery flow reached and worked with tab, enter and space alone: the skip link, sign-in by link and by password, propagate, the stewards queue, the handle picker, matter at a chosen tier, a germination, bond and fuse, rot, decay and restore, decompose, the bin's days and emptying it, a puffball, a morel shared and unshared and its card, soil with its tiers, password and spore print, the theme and font toggles, privacy, account deletion. every stop showed a focus ring on screen, and every page change inside the app moved focus to the new content.\n\n${summary.map((line) => `- ${line}`).join('\n')}\n\n## dark\n\n${table('dark')}\n\n## light\n\n${table('light')}\n`);
   console.log(`report in ${report}`);
 }
 process.exit(failed ? 1 : 0);

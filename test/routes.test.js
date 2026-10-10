@@ -5,7 +5,7 @@ import { startApp, seedUser, signIn } from './helpers.js';
 test('every page url serves the page, and unknown api and auth paths are json 404s', async (t) => {
   const app = await startApp(t);
   const client = app.client();
-  for (const path of ['/', '/auth', '/archive', '/bin', '/substrate', '/settings', '/privacy', '/about', '/terms', '/contact', '/thread/a1b2c3d4e5f6a1b2c3d4e5f6', '/@alice']) {
+  for (const path of ['/', '/auth', '/archive', '/bin', '/morel', '/substrate', '/settings', '/privacy', '/about', '/terms', '/contact', '/thread/a1b2c3d4e5f6a1b2c3d4e5f6', '/@alice']) {
     const res = await client.get(path);
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get('content-type'), /text\/html/, path);
@@ -28,6 +28,8 @@ test('health and config answer', async (t) => {
   assert.deepEqual((await app.client().get('/api/config')).body, {
     signupMode: 'allowlist',
     maxPostChars: 500,
+    maxMorelChars: 20000,
+    puffballChars: 140,
     tiers: ['public', 'followers', 'friends', 'private'],
     signIn: ['link', 'password'],
   });

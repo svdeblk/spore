@@ -54,7 +54,42 @@ function RelationButtons({ handle, relation, onChange }) {
   );
 }
 
-export function ProfileScreen({ handle, me }) {
+// 1 line of status; whoever can see the profile sees it, owner sets or takes it down
+function Puffball({ puffball, self, config, onChange }) {
+  const [text, setText] = useState(puffball?.text ?? '');
+  const { run, busy, error } = useAction();
+  const limit = config.puffballChars ?? 140;
+  const save = (event) => {
+    event.preventDefault();
+    run(async () => onChange((await api('/api/me/puffball', { method: 'PUT', body: { text } })).puffball));
+  };
+  const clear = () => run(async () => {
+    await api('/api/me/puffball', { method: 'DELETE' });
+    setText('');
+    onChange(null);
+  });
+
+  if (!self) {
+    if (!puffball) return null;
+    return <p className="puffball"><span className="puffball-label">{words.puffball}</span> {puffball.text}</p>;
+  }
+  return (
+    <form className="puffball-form" onSubmit={save}>
+      <label className="field inline" htmlFor="puffball">
+        <span>{words.puffball}</span>
+        <input id="puffball" maxLength={limit} value={text} placeholder={words.puffballPlaceholder} onChange={(event) => setText(event.target.value)} aria-describedby="puffball-hint" />
+      </label>
+      <div className="buttons">
+        <button type="submit" disabled={busy || !text.trim() || text.trim() === puffball?.text}>{words.puffballSet}</button>
+        {puffball && <button type="button" className="secondary" disabled={busy} onClick={clear}>{words.puffballClear}</button>}
+      </div>
+      <p id="puffball-hint" className="quiet">{words.puffballHint}</p>
+      <ErrorNote error={error} />
+    </form>
+  );
+}
+
+export function ProfileScreen({ handle, me, config }) {
   const [profile, setProfile] = useState(null);
   const [refused, setRefused] = useState(null);
   const [done, setDone] = useState(false);
@@ -111,6 +146,7 @@ export function ProfileScreen({ handle, me }) {
           {profile.email && <> · <a href={`mailto:${profile.email}`}>{profile.email}</a></>}
         </p>
       )}
+      {profile && <Puffball key={self ? 'mine' : 'theirs'} puffball={profile.puffball} self={self} config={config} onChange={(puffball) => setProfile({ ...profile, puffball })} />}
       {self && (
         <p className="quiet">
           this is you. change who sees what in <Link to="/settings">{words.soil}</Link>. out of view:{' '}

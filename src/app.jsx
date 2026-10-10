@@ -10,6 +10,7 @@ import { AuthScreen, HandlePicker, RequestAccessScreen } from './screens/auth.js
 import { AdminScreen, PrivacyScreen, SettingsScreen } from './screens/settings.jsx';
 import { KeptScreen } from './screens/kept.jsx';
 import { AboutScreen, ContactScreen, TermsScreen } from './screens/pages.jsx';
+import { MorelScreen } from './screens/morel.jsx';
 
 // theme & font only things kept in the browser
 function remembered(key, fallback) {
@@ -36,6 +37,7 @@ function Screen({ path, hash, me, config, refresh }) {
   let match;
   if (path === '/') return <FeedScreen me={me} config={config} kind="feed" />;
   if (path === '/substrate') return me ? <FeedScreen me={me} config={config} kind="substrate" /> : <p><Link to="/auth">sign in</Link> to see your {words.substrate}.</p>;
+  if (path === '/morel') return <MorelScreen me={me} config={config} />;
   if (path === '/auth') return <AuthScreen me={me} config={config} hash={hash} onSignedIn={refresh} />;
   if (path === '/request-access') return <RequestAccessScreen />;
   if (path === '/settings') return <SettingsScreen me={me} onChanged={refresh} />;
@@ -46,7 +48,7 @@ function Screen({ path, hash, me, config, refresh }) {
   if (path === '/terms') return <TermsScreen />;
   if (path === '/contact') return <ContactScreen />;
   if ((match = path.match(/^\/thread\/([0-9a-f]{24})$/))) return <ThreadScreen id={match[1]} me={me} config={config} />;
-  if ((match = path.match(/^\/@([a-z0-9_]{1,20})$/))) return <ProfileScreen handle={match[1]} me={me} />;
+  if ((match = path.match(/^\/@([a-z0-9_]{1,20})$/))) return <ProfileScreen handle={match[1]} me={me} config={config} />;
   return <p>nothing grows here. <Link to="/">{words.back}</Link></p>;
 }
 

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# pulls main > installs > restarts; goes back if the app won't load
+# safe to run any time, nothing new = does nothing
+# systemd timer runs it every 5 min, `deploy` runs it by hand
+# going back restores the db copy taken just before: newer version may have changed the tables
+# an older one refuses a newer db
+#
+# runs as root, so it's installed by hand & never updates itself:
+#   sudo install -m 755 /opt/spore/app/deploy/spore-deploy /usr/local/bin/spore-deploy
+set -euo pipefail
+
+APP=${SPORE_APP:-/opt/spore/app}
+DATA=${SPORE_DATA:-/opt/spore/data}
+PORT=${SPORE_PORT:-3000}
+BAD="$DATA/.failed-commit"
+
+as_spore() {
+  sudo -u spore env HOME=/opt/spore COREPACK_ENABLE_DOWNLOAD_PROMPT=0 bash -c "cd $APP && $1"
+}
+
+exec 9>"${SPORE_LOCK:-/run/spore-deploy.lock}"
+flock -n 9 || { echo "another deploy is running"; exit 0; }
+
+as_spore 'git fetch --quiet origin main'
+old=$(as_spore 'git rev-parse HEAD')
+new=$(as_spore 'git rev-parse origin/main')
+
+if [ "$old" = "$new" ]; then
+  echo "up to date at ${old:0:7}"
+  exit 0
+fi
+if [ -f "$BAD" ] && [ "$(cat "$BAD")" = "$new" ]; then
+  echo "${new:0:7} failed before and is skipped until main changes"
+  exit 0
+fi
+
+echo "updating ${old:0:7} to ${new:0:7}"
+backup=
+sudo -u spore mkdir -p "$DATA/backups"
+if [ -f "$DATA/spore.db" ]; then
+  backup="$DATA/backups/before-${new:0:7}.db"
+  sudo -u spore sqlite3 "$DATA/spore.db" ".backup $backup"
+  ls -1t "$DATA"/backups/*.db | tail -n +11 | xargs -r rm --
+fi
+
+install_and_restart() {
+  as_spore 'corepack pnpm install --frozen-lockfile --prod' || return 1
+  systemctl restart spore
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    sleep "${SPORE_WAIT:-1}"
+    if curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1; then return 0; fi
+  done
+  return 1
+}
+
+as_spore 'git reset --hard origin/main'
+if install_and_restart; then
+  rm -f "$BAD"
+  echo "now running ${new:0:7}"
+  exit 0
+fi
+
+# run backup healthcheck every deploy
+
+echo "${new:0:7} did not come up, going back to ${old:0:7}"
+echo "$new" | sudo -u spore tee "$BAD" >/dev/null
+systemctl stop spore
+as_spore "git reset --hard $old"
+if [ -n "$backup" ]; then
+  sudo -u spore rm -f "$DATA/spore.db-wal" "$DATA/spore.db-shm"
+  sudo -u spore cp "$backup" "$DATA/spore.db"
+  echo "restored the database from before the update"
+fi
+install_and_restart || echo "the old version did not come up either: look at journalctl -u spore"
+exit 1

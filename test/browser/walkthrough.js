@@ -127,13 +127,40 @@ async function walk(browser, theme, width) {
   await page.getByRole('navigation', { name: 'main' }).getByRole('link', { name: '@walker' }).click();
   await expectText(page, 'this one decays.');
 
+  // a puffball on the profile, then a morel shared to the feed as a card
+  await page.getByLabel('puffball', { exact: true }).fill('out in the woods this week');
+  await page.getByRole('button', { name: 'set puffball' }).click();
+  await page.getByRole('button', { name: 'take it down' }).waitFor();
+  await shot('puffball');
+  await page.getByRole('navigation', { name: 'main' }).getByRole('link', { name: 'feed' }).click();
+  await page.getByRole('link', { name: 'write a morel' }).click();
+  await page.getByLabel('title', { exact: true }).fill('on moss');
+  await page.getByLabel('the morel', { exact: true }).fill('a long *thought* about moss.\n\nand then some more of it.');
+  await page.getByLabel('share to the feed as a card').check();
+  await shot('morel-form');
+  await page.getByRole('button', { name: 'release morel' }).click();
+  await page.getByRole('heading', { name: 'on moss' }).waitFor();
+  await expectText(page, 'and then some more of it.');
+  await page.getByRole('button', { name: 'take the card back' }).click();
+  await page.getByRole('button', { name: 'share to the feed', exact: true }).click();
+  await page.getByRole('button', { name: 'take the card back' }).waitFor();
+  await shot('morel');
+  await page.getByRole('link', { name: '← burrow' }).click();
+  await page.locator('article', { hasText: 'on moss' }).getByRole('link', { name: 'read morel' }).waitFor();
+  await shot('morel-card');
+  await page.locator('article', { hasText: 'on moss' }).getByRole('link', { name: 'read morel' }).click();
+  await page.getByRole('heading', { name: 'on moss' }).waitFor();
+  await page.getByRole('navigation', { name: 'main' }).getByRole('link', { name: '@walker' }).click();
+  await page.getByRole('button', { name: 'take it down' }).waitFor();
+  if (await page.getByLabel('puffball', { exact: true }).inputValue() !== 'out in the woods this week') problems.push('the puffball was not kept');
+
   await page.getByRole('navigation', { name: 'main' }).getByRole('link', { name: 'soil' }).click();
   await page.getByRole('heading', { name: 'who sees what' }).waitFor();
   await shot('soil');
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'render spore print' }).click()]);
   const print = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
   if (download.suggestedFilename() !== 'spore-print-walker.json') problems.push(`export named ${download.suggestedFilename()}`);
-  if (print.matter.length !== 3) problems.push(`export holds ${print.matter.length} matter, expected 3`);
+  if (print.matter.length !== 4) problems.push(`export holds ${print.matter.length} matter, expected 4`);
 
   await page.getByLabel(/type your handle/).fill('walker');
   await page.getByRole('button', { name: 'delete everything' }).click();

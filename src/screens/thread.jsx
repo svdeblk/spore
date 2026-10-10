@@ -26,7 +26,14 @@ export function ThreadScreen({ id, me, config }) {
       {!thread && !error && <Loading />}
       {thread && (
         <>
-          <Matter post={thread.root} linkToThread={false} canRot={canRot(thread.root)} canMove={me?.handle === thread.root.author.handle} onGone={() => history.back()} />
+          <Matter
+            post={thread.root}
+            linkToThread={false}
+            canRot={canRot(thread.root)}
+            canMove={me?.handle === thread.root.author.handle}
+            onGone={() => history.back()}
+            onChanged={(root) => setThread((current) => ({ ...current, root }))}
+          />
           <h2 className="section-heading">{words.germinations(thread.replies.length)}</h2>
           <div className="replies">
             {thread.replies.map((reply) => (

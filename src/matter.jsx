@@ -13,8 +13,17 @@ export function MatterBody({ html }) {
 
 // canMove = author alone: decay & decompose rm matter from front-view & can be undone
 // canRot ± root's author clearing germinations + stewards actions
-export function Matter({ post, canRot, canMove, onGone, linkToThread = true }) {
+export function Matter({ post, canRot, canMove, onGone, onChanged, linkToThread = true }) {
   const { run, busy, error } = useAction();
+  // morel in a list = card (title + excerpt); on its own page = whole
+  const morel = post.kind === 'morel';
+  const card = morel && post.html === undefined;
+  const [shared, setShared] = useState(Boolean(post.shared));
+  const share = () => run(async () => {
+    const next = await api(`/api/morels/${post.id}`, { method: 'PATCH', body: { shared: !shared } });
+    setShared(next.shared);
+    onChanged?.(next);
+  });
   const confirm = useConfirm();
   const rot = async () => {
     if (!(await confirm(words.rotConfirm, { yes: words.rot, danger: true }))) return;
@@ -29,17 +38,24 @@ export function Matter({ post, canRot, canMove, onGone, linkToThread = true }) {
   });
 
   return (
-    <article className="matter" aria-label={`matter from @${post.author.handle}`}>
+    <article className="matter" aria-label={`${morel ? words.morel : 'matter'} from @${post.author.handle}`}>
       <header className="matter-meta">
         <Link to={`/@${post.author.handle}`}>@{post.author.handle}</Link>
         <Time iso={post.created_at} />
         {post.tier !== 'public' && !post.parent_id && <span className="tier">{words.tiers[post.tier]}</span>}
       </header>
-      <MatterBody html={post.html} />
+      {morel && (card
+        ? <h2 className="morel-title"><Link to={`/thread/${post.id}`}>{post.title}</Link></h2>
+        : <h1 className="morel-title">{post.title}</h1>)}
+      {card ? <p className="excerpt">{post.excerpt}</p> : <MatterBody html={post.html} />}
       <footer className="matter-actions">
         {linkToThread && !post.parent_id && (
-          <Link to={`/thread/${post.id}`}>{post.replies > 0 ? words.germinations(post.replies) : words.viewGerminations}</Link>
+          card
+            ? <Link to={`/thread/${post.id}`}>{post.replies > 0 ? `${words.readMorel} · ${words.germinations(post.replies)}` : words.readMorel}</Link>
+            : <Link to={`/thread/${post.id}`}>{post.replies > 0 ? words.germinations(post.replies) : words.viewGerminations}</Link>
         )}
+        {morel && canMove && <span className="tier">{shared ? words.onTheFeed : 'not on the feed'}</span>}
+        {morel && canMove && <button type="button" className="quiet-button" onClick={share} disabled={busy}>{shared ? words.unshare : words.shareNow}</button>}
         {canMove && <button type="button" className="quiet-button" onClick={() => move('archive')} disabled={busy}>{words.decay}</button>}
         {canMove && <button type="button" className="quiet-button" onClick={() => move('bin')} disabled={busy}>{words.decompose}</button>}
         {canRot && <button type="button" className="quiet-button" onClick={rot} disabled={busy}>{words.rot}</button>}

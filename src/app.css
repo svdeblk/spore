@@ -550,3 +550,43 @@ h2 {
 .replies + .composer {
   margin-top: 18px;
 }
+
+.morel-title {
+  font-size: 18px;
+  line-height: 1.35;
+  margin: 10px 0 4px;
+}
+
+.morel-title a {
+  color: var(--fg);
+}
+
+.excerpt {
+  margin: 4px 0 10px;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.check input {
+  width: auto;
+}
+
+.puffball {
+  margin: 8px 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.puffball-label {
+  color: var(--muted);
+  margin-right: 8px;
+}
+
+.puffball-form {
+  margin: 8px 0 16px;
+}

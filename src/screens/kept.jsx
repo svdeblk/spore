@@ -29,7 +29,8 @@ function KeptMatter({ post, onGone }) {
           ? <Link to={`/thread/${post.parent_id}`}>{words.germination}</Link>
           : post.tier !== 'public' && <span className="tier">{words.tiers[post.tier]}</span>}
       </header>
-      <MatterBody html={post.html} />
+      {post.kind === 'morel' && <h2 className="morel-title"><Link to={`/thread/${post.id}`}>{post.title}</Link></h2>}
+      {post.kind === 'morel' ? <p className="excerpt">{post.excerpt}</p> : <MatterBody html={post.html} />}
       <p className="quiet">
         {decayed && <>{words.decayed} <Time iso={post.archived_at} /></>}
         {!decayed && (post.gone_at ? <>rots <Time iso={post.gone_at} /></> : 'stays until you rot it')}
