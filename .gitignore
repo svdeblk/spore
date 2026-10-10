@@ -1,0 +1,24 @@
+# node
+
+node_modules/
+
+# secs & keys
+
+.env
+.env.local
+
+# temp db files
+
+*.db
+*.db-shm
+*.db-wal
+
+# loc junk only
+
+.DS_Store
+
+# debug & gen test logs + build deps
+
+public/build/
+walkthrough-screens/
+a11y-*-FAILED.png

@@ -1,0 +1,51 @@
+{
+  "name": "spore",
+  "version": "0.2.0",
+  "description": "a small microblog with privacy tiers, its own markdown dialect, and community functionality",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.jsx --bundle --jsx=automatic --minify --sourcemap --target=es2022 --outdir=public/build --entry-names=[name] --asset-names=fonts/[name]-[hash] --loader:.woff2=file --loader:.woff=file --define:API_BASE=\\\"${API_BASE:-}\\\"",
+    "start": "node server.js",
+    "dev": "pnpm build --watch=forever & node --watch --env-file-if-exists=.env server.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "walkthrough": "pnpm build && node test/browser/walkthrough.js",
+    "a11y": "pnpm build && node test/browser/a11y.js"
+  },
+  "keywords": [
+    "microblog",
+    "markdown",
+    "sqlite",
+    "spore",
+    "mushroom-themed"
+  ],
+  "homepage": "https://spore.bond",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svdeblk/spore.git"
+  },
+  "author": "SVDE",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "resend": "^6.30.0"
+  },
+  "devDependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/literata": "^5.3.0",
+    "@fontsource/public-sans": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

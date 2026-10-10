@@ -1,0 +1,8 @@
+# better-sqlite3 13 loads a prebuilt binary from prebuilds/; gyp step compiles nothing
+
+allowBuilds:
+  better-sqlite3: false
+
+  # esbuild's binary arrives as a platform pkg; its install script only double-checks it
+
+  esbuild: false
